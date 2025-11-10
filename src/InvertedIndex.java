@@ -18,8 +18,8 @@ public class InvertedIndex {
             .split("\\s+");
         for (String enkeltOrd : ord) {
             if (!enkeltOrd.isEmpty()) {
-                indeks.computeIfAbsent(enkeltOrd, k -> new HashMap<>()) 
-                     .merge(dokNavn, 1, Integer::sum);
+                indeks.computeIfAbsent(enkeltOrd, k -> new HashMap<>())
+                      .merge(dokNavn, 1, Integer::sum); //Copilot forbedring 
             }
         }
     }
@@ -68,11 +68,10 @@ public class InvertedIndex {
 
     // Enkelt søk: returnerer dokumenter som inneholder ordet man leter etter
     public Set<String> sok(String ord) {
-        return indeks.containsKey(ord.toLowerCase())
-                ? new HashSet<>(indeks.get(ord.toLowerCase()).keySet())
-                : new HashSet<>();
-    }
-
+        if (ord == null) return new HashSet<>();
+        Map<String,Integer> dokMap = indeks.get(ord.toLowerCase());
+        return (dokMap == null) ? new HashSet<>() : new HashSet<>(dokMap.keySet()); //Copilot forbedring 
+}
     // Rangert søk: dokumenter sortert etter antall forekomster
     public List<Map.Entry<String, Integer>> sokRangert(String ord) {
         Map<String, Integer> dokumenter = indeks.get(ord.toLowerCase());
