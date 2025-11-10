@@ -1,0 +1,110 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[norsk,english]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{setspace}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{graphicx} 
+\geometry{margin=2.5cm}
+
+\setstretch{1.15}
+
+\begin{document}
+
+\section*{Task 4 – Reflection and Analysis}
+
+\subsection*{4.1 Naive search vs. inverted index}
+A naive search algorithm scans every document from start to finish for each query. 
+For example, if a collection contains one thousand documents with one hundred words each, 
+the program must compare about one hundred thousand tokens per search. 
+If we run ten searches, that becomes one million comparisons in total. 
+The time complexity of such an approach is $O(n \cdot m)$, where $n$ is the number of documents 
+and $m$ is the average number of words in each document. 
+The advantage of the naive approach is that it requires no preprocessing, 
+but the drawback is that each search becomes increasingly expensive as the dataset grows.
+
+The inverted index, on the other hand, moves the work from the search phase to a preprocessing phase. 
+My implementation builds a structure that maps each word to the documents it appears in, 
+as well as the number of occurrences in each document. 
+This is achieved with a nested \texttt{HashMap} in Java, where the outer map stores words 
+and the inner map stores document names with corresponding frequencies. 
+Once the index is built, searching for a word like ``java'' becomes a single hash lookup, 
+which is on average $O(1)$, followed by iterating through the matching documents in $O(k)$, 
+where $k$ is the number of results. 
+The total cost per query is therefore $O(k)$, compared to $O(n \cdot m)$ for naive search. 
+The building process itself still runs in $O(T)$, where $T$ is the total number of words processed, 
+but this cost is paid only once. 
+The key advantage is that subsequent searches are nearly constant in time regardless of the number of documents.
+
+\subsection*{4.2 Build time}
+In practice, building the index is very fast. 
+For a small dataset of three short documents containing about forty words in total, 
+the measured build time was around \textbf{8.67\,ms} using \texttt{System.nanoTime()}. 
+When scaling to hundreds or thousands of documents, the building time increased linearly 
+with the number of tokens, confirming the theoretical complexity $O(T)$. 
+This shows that the index construction is efficient and scales predictably with input size.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\linewidth]{image.png}
+    \caption{Example program output showing build time, search results, and ranking.}
+    \label{fig:output}
+\end{figure}
+
+\subsection*{4.3 Search time (AND/OR/NOT)}
+The search performance also follows the expected pattern. 
+A simple single-word query such as ``java'' returned results instantly 
+(\textbf{$\approx$ 0.011\,ms}), and even combined searches remained extremely fast. 
+Operations like ``java AND data'' (\textbf{$\approx$ 0.015\,ms}) or ``java OR data'' 
+only required set intersections or unions on small collections, 
+both of which are linear in the size of the result sets rather than the total number of documents. 
+This demonstrates that the search cost depends on the number of documents 
+that contain the queried terms, not on the overall corpus size.
+
+\subsection*{4.4 Ranking and frequency}
+The ranking function in my implementation orders documents by word frequency. 
+It gathers the pairs of documents and frequencies and then sorts them in descending order. 
+Creating the list of results takes $O(k)$ time, and sorting adds $O(k \log k)$. 
+For small result sets this cost is negligible, but for thousands of results 
+the sorting step becomes the main bottleneck. 
+A possible improvement would be to use a priority queue (heap) to retrieve only 
+the top few results, reducing the cost to $O(k \log N)$ where $N$ is the number of results we want to keep.
+
+\subsection*{4.5 Further extensions and reflections}
+This assignment clearly illustrates the trade-off between preprocessing and query-time efficiency. 
+By investing time once to build the index, we achieve near-instant searches afterward. 
+It also highlights the importance of data structure choice: using \texttt{HashMap} and \texttt{Set} 
+provides $O(1)$ average lookup, making it possible to handle thousands of documents efficiently with minimal code. 
+The difference between the naive and indexed approach becomes significant as the number of queries increases, 
+showing how preprocessing is a fundamental optimization strategy in information retrieval systems.
+
+Possible future improvements include adding phrase search by storing word positions, 
+implementing TF--IDF weighting for better ranking, filtering out common stop words, 
+and adding Unicode/norwegian-friendly tokenization (for example using \verb|\p{L}| and \verb|\p{N}|) 
+to support words with Norwegian characters such as æ, ø, and å, 
+and allowing persistent storage so the index does not have to be rebuilt each time. 
+The current solution is limited by memory, since all data resides in RAM, 
+and it lacks incremental updates or compression. 
+Nevertheless, it demonstrates the same core principles that large-scale search engines rely on.
+
+Through this assignment, I learned how theoretical algorithmic complexity directly connects 
+to measurable performance. Implementing the inverted index from scratch deepened my understanding 
+of how search engines optimize query processing, and how a simple data structure 
+can drastically change scalability. I also improved my ability to analyze runtime behavior 
+using both Big-O theory and empirical testing in Java.
+
+\subsection*{AI Usage and Code Authenticity Statement}
+I employed GitHub Copilot as a supportive tool during development. 
+It suggested concise Java patterns such as \texttt{computeIfAbsent()} and \texttt{merge()} 
+and helped improve the language in Task~4. 
+All core code and analysis were written and adapted by me, 
+and any section improved with AI assistance is marked with the comment 
+\texttt{// Copilot forbedring (Copilot improvement)}. 
+AI support was used only for learning and efficiency, 
+not as a replacement for independent problem solving.
+
+\end{document}
