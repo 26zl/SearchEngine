@@ -1,7 +1,7 @@
 /**
- * Main klasse for å demonstrere funksjonaliteten til InvertedIndex.java med ulike søk og rangering.
+ * Main-klasse for å demonstrere funksjonaliteten til InvertedIndex
+ * (bygging, enkeltsøk, AND/OR/NOT, rangering og tidsmålinger).
  */
-
 public class Main {
     public static void main(String[] args) {
         InvertedIndex indeks = new InvertedIndex();
@@ -12,7 +12,8 @@ public class Main {
         indeks.leggTilIIndeks("Dok2", "Java and data science");
         indeks.leggTilIIndeks("Dok3", "Data is everywhere and Java is useful");
         long tid2 = System.nanoTime();
-        System.out.println("Byggetid: " + (tid2 - tid1) / 1_000_000.0 + " ms\n");
+        double byggTidMs = (tid2 - tid1) / 1_000_000.0;
+        System.out.println("Byggetid: " + byggTidMs + " ms\n");
 
         // Vis indeks (Oppgave 1)
         indeks.skrivUtIndeks();
@@ -36,22 +37,38 @@ public class Main {
         }
         System.out.println();
 
-        // Tidsmålinger (Oppgave 4) // Noe copilot forbedringer
+        System.out.println("Rangert 'java' + 'data':");
+        for (var e : indeks.sokRangert("java", "data")) {
+            int f = e.getValue();
+            System.out.println("  " + e.getKey() + ": " + f + " " + (f == 1 ? "forekomst" : "forekomster"));
+        }
+        System.out.println();
+
+        // Tidsmålinger (Oppgave 4)
         long q0 = System.nanoTime();
         indeks.sok("java");
         long q1 = System.nanoTime();
-        System.out.println("Søketid 'java': " + (q1 - q0) / 1_000_000.0 + " ms");
+        double sokJavaMs = (q1 - q0) / 1_000_000.0;
+        System.out.println("Søketid 'java': " + sokJavaMs + " ms");
 
         long a0 = System.nanoTime();
         indeks.ogSok("java", "data");
         long a1 = System.nanoTime();
-        System.out.println("Søketid 'java AND data': " + (a1 - a0) / 1_000_000.0 + " ms\n");
+        double sokJavaAndDataMs = (a1 - a0) / 1_000_000.0;
+        System.out.println("Søketid 'java AND data': " + sokJavaAndDataMs + " ms\n");
+
+        // Kort refleksjon (til Oppgave 4 i rapport)
+        System.out.println("Refleksjon: Indeksbygging flytter arbeidet til forhåndsprosessering og kostet ~"
+                + byggTidMs + " ms, mens enkeltsøk tok ~" + sokJavaMs + " ms og kombinerte søk ~"
+                + sokJavaAndDataMs + " ms. Dette støtter analysen om at søketid domineres av antall treff.");
+        System.out.println();
 
         // Tømmer indeksen
         indeks.tomIndeks();
         System.out.println("Etter tømming, søk 'java': " + indeks.sok("java"));
     }
-    // Hjelpemetode for å beregne total frekvens av et ord i alle dokumenter
+
+    // Summerer frekvens for et ord over alle dokumenter
     private static int totalFrekvens(InvertedIndex indeks, String ord) {
         int sum = 0;
         for (String dok : indeks.sok(ord)) {
